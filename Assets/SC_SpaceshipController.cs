@@ -22,6 +22,8 @@ public class SC_SpaceshipController : MonoBehaviour
     float mouseXSmooth = 0;
     float mouseYSmooth = 0;
     Vector3 defaultShipRotation;
+    public ParticleSystem rightPar;
+    public ParticleSystem leftPar;
 
     // Start is called before the first frame update
     void Start()
@@ -29,13 +31,22 @@ public class SC_SpaceshipController : MonoBehaviour
         r = GetComponent<Rigidbody>();
         r.useGravity = false;
         lookRotation = transform.rotation;
-        defaultShipRotation = spaceshipRoot.localEulerAngles;
-        rotationZ = defaultShipRotation.z;
+        //defaultShipRotation = spaceshipRoot.localEulerAngles;
+        rotationZ = 0;
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
+    private void OnCollisionEnter(Collision other)
+    {
+        string tag = other.gameObject.tag;
+        Debug.Log("Collied");
+        if (tag == "Finish")
+        {
+            Debug.Log("Enemy collied");
+        }
+    }
     void Update()
     {
         //Press Right Mouse Button to accelerate
@@ -47,8 +58,12 @@ public class SC_SpaceshipController : MonoBehaviour
         {
             speed = Mathf.Lerp(speed, normalSpeed, Time.deltaTime * 10);
         }
-
-        //Set moveDirection to the vertical axis (up and down keys) * speed
+        
+        if(Input.GetKeyDown(KeyCode.Space)){
+            rightPar.Emit(1);
+            leftPar.Emit(1);
+        }
+               //Set moveDirection to the vertical axis (up and down keys) * speed
         Vector3 moveDirection = new Vector3(0, 0, speed);
         //Transform the vector3 to local space
         moveDirection = transform.TransformDirection(moveDirection);
@@ -56,7 +71,7 @@ public class SC_SpaceshipController : MonoBehaviour
         r.velocity = new Vector3(moveDirection.x, moveDirection.y, moveDirection.z);
 
         //Camera follow
-        mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, cameraPosition.position, Time.deltaTime * cameraSmooth);
+        //  mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, cameraPosition.position, Time.deltaTime * cameraSmooth);
         //mainCamera.transform.rotation = Quaternion.Lerp(mainCamera.transform.rotation, cameraPosition.rotation, Time.deltaTime * cameraSmooth);
 
         //Rotation
@@ -69,14 +84,16 @@ public class SC_SpaceshipController : MonoBehaviour
         {
             rotationZTmp = -1;
         }
-        mouseXSmooth = Mathf.Lerp(mouseXSmooth, Input.GetAxis("Mouse X") * rotationSpeed, Time.deltaTime * cameraSmooth);
+        // mouseXSmooth = Mathf.Lerp(mouseXSmooth, Input.GetAxis("Mouse X") * rotationSpeed, Time.deltaTime * cameraSmooth);
         mouseYSmooth = Mathf.Lerp(mouseYSmooth, Input.GetAxis("Vertical") * rotationSpeed, Time.deltaTime * cameraSmooth);
-        Quaternion localRotation = Quaternion.Euler(-mouseYSmooth, mouseXSmooth, rotationZTmp * rotationSpeed);
+
+        Quaternion localRotation = Quaternion.Euler(-mouseYSmooth, 0, rotationZTmp * rotationSpeed);
         lookRotation = lookRotation * localRotation;
+        //Debug.Log(lookRotation);
         transform.rotation = lookRotation;
         rotationZ -= mouseXSmooth;
         rotationZ = Mathf.Clamp(rotationZ, -45, 45);
-        spaceshipRoot.transform.localEulerAngles = new Vector3(defaultShipRotation.x, defaultShipRotation.y, rotationZ);
+        //spaceshipRoot.transform.localEulerAngles = new Vector3(defaultShipRotation.x, defaultShipRotation.y, rotationZ);
         rotationZ = Mathf.Lerp(rotationZ, defaultShipRotation.z, Time.deltaTime * cameraSmooth);
 
         //Update crosshair texture
